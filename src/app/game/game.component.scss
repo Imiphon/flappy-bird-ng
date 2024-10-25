@@ -15,6 +15,7 @@ canvas {
   #pauseButton, #restartButton {
     padding: 10px 20px;
     font-size: 16px;
+    color: white;
     cursor: pointer;
   }
 
@@ -23,4 +24,4 @@ canvas {
     width: fit-content ;
     display: flex;
     flex-direction: column;
-  }
+  } 

@@ -24,8 +24,6 @@ export class GameComponent implements OnInit {
   gameRunning = false;
   gamePaused = false;
   spacePressed = false;
-
-  // Zähler für passierte Columns
   passedColumns = 0;
 
   // Rekord
@@ -73,7 +71,7 @@ export class GameComponent implements OnInit {
 
   startGame(): void {
     this.gameRunning = true;
-    this.passedColumns = 0;  // Zähler zurücksetzen, wenn das Spiel startet
+    this.passedColumns = 0;
     this.gameLoop();
   }
 
@@ -90,28 +88,22 @@ export class GameComponent implements OnInit {
 
   update(): void {
     this.bird.update(this.spacePressed);
-
     // Create new columns
     this.frameCount++;
     if (this.frameCount % this.columnFrequency === 0) {
       this.addColumn();
     }
-
     // Update columns
     for (let column of this.columns) {
       column.update();
-
-      // Überprüfen, ob der Vogel die Column erfolgreich passiert hat
+      // check if bird is passing a collumn
       if (!column.passed && column.x + this.columnWidth < this.bird.x) {
         column.passed = true;
         this.passedColumns++;  // Zähler erhöhen
       }
     }
-
     // Remove off-screen columns
     this.columns = this.columns.filter(column => !column.isOffScreen());
-
-    // Check collisions
     this.checkCollisions();
   }
 
@@ -119,32 +111,24 @@ export class GameComponent implements OnInit {
     // Clear the canvas and set background color
     this.ctx.fillStyle = 'blue';
     this.ctx.fillRect(0, 0, this.canvas.nativeElement.width, this.canvas.nativeElement.height);
-
-    // Draw the bird
     this.bird.draw(this.ctx);
-
-    // Draw columns
     for (let column of this.columns) {
       column.draw(this.ctx, this.canvas.nativeElement.height);
     }
-
     // Draw the button at the bottom right corner
     this.ctx.drawImage(this.buttonImage, this.buttonX, this.buttonY, this.buttonWidth, this.buttonHeight);
-
     // Draw the pause button
     this.ctx.fillStyle = 'red';  // Button Farbe
-    this.ctx.fillRect(20, 20, 100, 40); // Pause-Button oben links
+    this.ctx.fillRect(20, 20, 100, 40); // Pause top left
     this.ctx.fillStyle = 'white';
     this.ctx.font = '20px Arial';
-    this.ctx.fillText('Pause', 35, 45);  // Text auf dem Pause-Button
-
-    // Anzahl der passierten Columns und Rekord oben links anzeigen
+    this.ctx.fillText('Pause', 35, 45);  // Text on Pause-Button
+    // count Columns and set new record
     this.ctx.fillStyle = 'white';
     this.ctx.font = '20px Arial';
     this.ctx.fillText(`Passed Columns: ${this.passedColumns}`, 10, 80);
-    this.ctx.fillText(`Record: ${this.record}`, 10, 110); // Zeige den Rekord an
+    this.ctx.fillText(`Record: ${this.record}`, 10, 110); // show new record
   }
-
 
   addColumn(): void {
     const canvasHeight = this.canvas.nativeElement.height;
@@ -163,7 +147,7 @@ export class GameComponent implements OnInit {
 
   checkCollisions(): void {
     if (this.bird.y + this.bird.height > this.canvas.nativeElement.height || this.bird.y < 0) {
-      this.endGame(); // Spiel abbrechen, wenn der Vogel mit dem Boden/Decke kollidiert
+      this.endGame(); // end if bird is out of canvas
     }
 
     for (let column of this.columns) {
@@ -172,18 +156,17 @@ export class GameComponent implements OnInit {
         this.bird.x + this.bird.width > column.x &&
         (this.bird.y < column.y || this.bird.y + this.bird.height > column.y + this.columnGap)
       ) {
-        this.endGame(); // Spiel abbrechen, wenn der Vogel eine Column trifft
+        this.endGame(); // end if bird is colliding
       }
     }
   }
 
   endGame(): void {
-    // Vergleiche die Anzahl der passierten Columns mit dem Rekord
+    // compare passed colukmns with current record
     if (this.passedColumns > this.record) {
-      this.record = this.passedColumns; // Neuer Rekord
-      localStorage.setItem('flappyBirdRecord', this.record.toString()); // Im localStorage speichern
+      this.record = this.passedColumns; // new record
+      localStorage.setItem('flappyBirdRecord', this.record.toString());
     }
-
     this.resetGame();
   }
 
@@ -191,8 +174,8 @@ export class GameComponent implements OnInit {
     this.bird.reset(300);
     this.columns = [];
     this.frameCount = 0;
-    this.passedColumns = 0;  // Zähler zurücksetzen, wenn das Spiel neu gestartet wird
-    this.gamePaused = false; 
+    this.passedColumns = 0;  // set back counter
+    this.gamePaused = false;
   }
 
   // restartGame(): void {
@@ -207,77 +190,76 @@ export class GameComponent implements OnInit {
 
   //for keyboard
   @HostListener('window:keydown', ['$event'])
-handleKeyDown(event: KeyboardEvent): void {
-  if (event.code === 'Space') {
-    this.spacePressed = true;  // Simulate space press
-  } else if (event.code === 'KeyP') {
-    this.togglePause();  // Simulate pause toggle when 'P' is pressed
-  }
-}
-     
-@HostListener('window:keyup', ['$event'])
-handleKeyUp(event: KeyboardEvent): void {
-  if (event.code === 'Space') {
-    this.spacePressed = false;  // Stop space press simulation
-  }
-}
-
-//four mouse
-@HostListener('mousedown', ['$event'])
-handleMouseDown(event: MouseEvent): void {
-  const rect = this.canvas.nativeElement.getBoundingClientRect();
-  const x = event.clientX - rect.left;
-  const y = event.clientY - rect.top;
-
-  // Check if mousedown is within the space button area
-  if (
-    x >= this.buttonX &&
-    x <= this.buttonX + this.buttonWidth &&
-    y >= this.buttonY &&
-    y <= this.buttonY + this.buttonHeight
-  ) {
-    this.spacePressed = true;  // Simulate space press
+  handleKeyDown(event: KeyboardEvent): void {
+    if (event.code === 'Space') {
+      this.spacePressed = true;  // Simulate space press
+    } else if (event.code === 'KeyP') {
+      this.togglePause();  // Simulate pause toggle when 'P' is pressed
+    }
   }
 
-  // Check if mousedown is within the pause button area (assumed at position (20, 20))
-  if (x >= 20 && x <= 120 && y >= 20 && y <= 60) {
-    this.togglePause();  // Pause button clicked
-  }
-}
-
-@HostListener('mouseup', ['$event'])
-handleMouseUp(event: MouseEvent): void {
-  this.spacePressed = false;  // Stop simulating space press when mouse is released
-}
-
-//for touchscreen
-@HostListener('touchstart', ['$event'])
-handleTouchStart(event: TouchEvent): void {
-  event.preventDefault();  // Prevent default scrolling or selection behavior
-  const rect = this.canvas.nativeElement.getBoundingClientRect();
-  const x = event.touches[0].clientX - rect.left;
-  const y = event.touches[0].clientY - rect.top;
-
-  // Check if touchstart is within the space button area
-  if (
-    x >= this.buttonX &&
-    x <= this.buttonX + this.buttonWidth &&
-    y >= this.buttonY &&
-    y <= this.buttonY + this.buttonHeight
-  ) {
-    this.spacePressed = true;  // Simulate space press
+  @HostListener('window:keyup', ['$event'])
+  handleKeyUp(event: KeyboardEvent): void {
+    if (event.code === 'Space') {
+      this.spacePressed = false;  // Stop space press simulation
+    }
   }
 
-  // Check if touchstart is within the pause button area (assumed at position (20, 20))
-  if (x >= 20 && x <= 120 && y >= 20 && y <= 60) {
-    this.togglePause();  // Pause button touched
+  //four mouse
+  @HostListener('mousedown', ['$event'])
+  handleMouseDown(event: MouseEvent): void {
+    const rect = this.canvas.nativeElement.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    // Check if mousedown is within the space button area
+    if (
+      x >= this.buttonX &&
+      x <= this.buttonX + this.buttonWidth &&
+      y >= this.buttonY &&
+      y <= this.buttonY + this.buttonHeight
+    ) {
+      this.spacePressed = true;  // Simulate space press
+    }
+
+    // Check if mousedown is within the pause button area (assumed at position (20, 20))
+    if (x >= 20 && x <= 120 && y >= 20 && y <= 60) {
+      this.togglePause();  // Pause button clicked
+    }
   }
-}
 
-@HostListener('touchend', ['$event'])
-handleTouchEnd(event: TouchEvent): void {
-  event.preventDefault();  // Prevent default behavior like scroll or zoom
-  this.spacePressed = false;  // Stop simulating space press when touch ends
-}
+  @HostListener('mouseup', ['$event'])
+  handleMouseUp(event: MouseEvent): void {
+    this.spacePressed = false;  // Stop simulating space press when mouse is released
+  }
 
+  //for touchscreen
+  @HostListener('touchstart', ['$event'])
+  handleTouchStart(event: TouchEvent): void {
+    event.preventDefault();  // Prevent default scrolling or selection behavior
+    const rect = this.canvas.nativeElement.getBoundingClientRect();
+    const x = event.touches[0].clientX - rect.left;
+    const y = event.touches[0].clientY - rect.top;
+
+    // Check if touchstart is within the space button area
+    if (
+      x >= this.buttonX &&
+      x <= this.buttonX + this.buttonWidth &&
+      y >= this.buttonY &&
+      y <= this.buttonY + this.buttonHeight
+    ) {
+      this.spacePressed = true;  // Simulate space press
+    }
+
+    // Check if touchstart is within the pause button area (assumed at position (20, 20))
+    if (x >= 20 && x <= 120 && y >= 20 && y <= 60) {
+      this.togglePause();  // Pause button touched
+    }
+  }
+
+  @HostListener('touchend', ['$event'])
+  handleTouchEnd(event: TouchEvent): void {
+    event.preventDefault();  // Prevent default behavior like scroll or zoom
+    this.spacePressed = false;  // Stop simulating space press when touch ends
+  }
 }
